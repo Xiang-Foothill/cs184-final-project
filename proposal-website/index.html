@@ -1,724 +1,336 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>StyleSlider Proposal</title>
-<meta name="description" content="StyleSlider: controllable geometric stylization of 3D meshes. CS 184/284A final project proposal, Fall 2026.">
-<meta name="color-scheme" content="light dark">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M4 26 16 4l12 22z' fill='%2317707A'/%3E%3Cpath d='M16 4l12 22H16z' fill='%23D4501F'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,100..900&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap">
-<!-- α only (unicode-range U+3B1): Newsreader's and JetBrains Mono's alpha read too much like "a" -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&text=%CE%B1&display=swap">
-<style>
-/* Layout: a project page for graders. A wide hero states the thesis with a live α slider;
-   below it, a reading column with a sticky section rail. Sections follow the course's
-   required proposal order. Teal = α 0 (original), vermilion = α 1 (stylized target). */
-:root {
-  --bg: #F4F7F6;
-  --surface: #FFFFFF;
-  --ink: #132322;
-  --muted: #566A67;
-  --line: #D5DFDD;
-  --orig: #17707A;
-  --styl: #D4501F;
-  --styl-ink: #B23F12;
-  --tint: #E8F1F0;
-  --mesh: #E1EBE9;
-  --wire: #A7BAB7;
-  --grid: #E9EFEE;
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>StyleSlider | CS 184/284A Final Project Proposal</title>
+  <meta name="description" content="StyleSlider: controllable geometric stylization of 3D meshes. CS 184/284A final project proposal, Fall 2026.">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+  <style>
+    body {
+      margin: 0;
+      background: white;
+      color: #171717;
+      font: 1rem/1.6 Inter, sans-serif;
+    }
 
-  --font-display: "Anybody", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
-  --font-body: "STIX Two Text", "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-  --font-mono: "STIX Two Text", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    .container {
+      width: min(60%, 58rem);
+      margin: 0 auto;
+      padding: 60px 0;
+    }
 
-  --fs-xs: 0.78rem;
-  --fs-sm: 0.95rem;
-  --fs-body: 1.15rem;
-  --fs-h3: 1.3rem;
-  --fs-h2: clamp(1.65rem, 1.25rem + 1.3vw, 2.15rem);
-  --radius: 12px;
+    header {
+      text-align: center;
+    }
 
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0E1615; --surface: #141F1E; --ink: #E3ECEA; --muted: #93A6A3; --line: #283735;
-    --orig: #5CC0C8; --styl: #FF8A5C; --styl-ink: #FF9D75; --tint: #16302F;
-    --mesh: #1B2827; --wire: #3F5654; --grid: #182423;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0E1615; --surface: #141F1E; --ink: #E3ECEA; --muted: #93A6A3; --line: #283735;
-  --orig: #5CC0C8; --styl: #FF8A5C; --styl-ink: #FF9D75; --tint: #16302F;
-  --mesh: #1B2827; --wire: #3F5654; --grid: #182423;
-  color-scheme: dark;
-}
+    h1, h2, h3, h4 {
+      line-height: 1.25;
+      font-weight: 600;
+    }
 
-*, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 24px; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: var(--fs-body);
-  line-height: 1.6;
-  font-optical-sizing: auto;
-  -webkit-font-smoothing: antialiased;
-}
-img, svg { max-width: 100%; }
-[hidden] { display: none !important; }
-a { color: var(--orig); text-decoration-thickness: 1px; text-underline-offset: 0.18em; }
-a:hover { text-decoration-thickness: 2px; }
-:focus-visible { outline: 2px solid var(--orig); outline-offset: 3px; border-radius: 3px; }
-h1, h2, h3, h4 { text-wrap: balance; }
-p, li { text-wrap: pretty; }
-sub { font-size: 0.68em; line-height: 0; }
-.math { font-family: var(--font-body); font-style: italic; white-space: nowrap; }
-.math .up { font-style: normal; }
+    h1, header p { margin: 0 0 0.5rem; }
+    h2 { margin: 2rem 0 0.75rem; }
+    h3 { margin: 1.5rem 0 0.5rem; }
+    h4 { margin: 1rem 0 0.4rem; }
+    p { margin: 0 0 1rem; }
+    ul, ol { padding-left: 1.5rem; }
+    li + li { margin-top: 0.25rem; }
+    .project-links a { overflow-wrap: anywhere; }
 
-.wrap {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-left: max(20px, env(safe-area-inset-left, 0px));
-  padding-right: max(20px, env(safe-area-inset-right, 0px));
-}
-.label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
+    .labeled-list { list-style: none; padding: 0; }
+    .refs p { margin: 0.25rem 0 0.75rem; }
 
-/* ---------- Hero ---------- */
-.hero { border-bottom: 1px solid var(--line); }
-.topbar {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-  gap: 8px 24px; padding-block: 18px; border-bottom: 1px solid var(--line);
-}
-.toplinks { display: flex; flex-wrap: wrap; gap: 6px 20px; font-family: var(--font-mono); font-size: var(--fs-xs); }
-.toplinks a { text-decoration: none; letter-spacing: 0.02em; }
-.toplinks a:hover { text-decoration: underline; }
+    .equation {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.25rem 1rem;
+      margin-bottom: 1rem;
+    }
 
-.hero-grid {
-  display: grid; gap: 40px; padding-block: 48px 56px;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: center;
-}
-@media (min-width: 960px) {
-  .hero-grid { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 56px; padding-block: 64px 72px; }
-}
-.hero-text { container-type: inline-size; min-width: 0; display: flex; flex-direction: column; gap: 22px; }
-.kicker { margin: 0; }
-.title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(2.6rem, 13cqi, 6rem);
-  font-weight: 660;
-  font-variation-settings: "wdth" 100;
-  line-height: 0.95;
-  letter-spacing: -0.012em;
-  white-space: nowrap;
-}
-.title .slide { color: var(--styl); }
-.subtitle { margin: -6px 0 0; font-style: italic; font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.65rem); line-height: 1.3; font-weight: 400; }
-.summary { margin: 0; font-size: 1.2rem; line-height: 1.6; max-width: 36em; }
-.meta { margin: 6px 0 0; display: grid; gap: 12px; padding-top: 18px; border-top: 1px solid var(--line); }
-.meta > div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 12px; align-items: baseline; }
-.meta dt { margin: 0; }
-.meta dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
-.team { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 18px; }
-.team li { white-space: nowrap; }
+    .equation-number, figcaption { color: #505050; }
+    .scroll, .tablewrap { overflow-x: auto; }
+    figure { margin: 1rem 0; text-align: center; }
+    figcaption { margin-top: 0.5rem; font-size: 0.9rem; }
+    .diagram svg { display: block; width: 100%; min-width: 680px; height: auto; }
+    .d-box, .d-pill { fill: #fff; stroke: #555; }
+    .d-line { fill: none; stroke: #555; }
+    .d-title { font-size: 12px; font-weight: 600; }
+    .d-label, .d-note { font-size: 11px; }
+    .d-math { font-size: 14px; font-style: italic; }
+    .d-sub { font-size: 10px; }
+    .d-big { font-size: 20px; font-style: italic; }
 
-/* Demo figure */
-.demo {
-  margin: 0; min-width: 0;
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: 0 1px 0 var(--line), 0 18px 40px -28px rgba(10, 40, 38, 0.35);
-}
-.viewport {
-  position: relative;
-  background-color: var(--surface);
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 24px 24px;
-  background-position: center;
-  border-bottom: 1px solid var(--line);
-  padding: 34px 14px 10px;
-}
-.viewport svg { display: block; width: 100%; height: auto; max-height: 410px; }
-.hud {
-  position: absolute; top: 10px;
-  font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted);
-  font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
-}
-.hud-l { left: 14px; }
-.hud-r { right: 14px; color: var(--ink); font-weight: 600; }
+    .strip ol {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr));
+      gap: 0.75rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
 
-.controls { display: grid; gap: 12px; padding: 16px 18px 6px; }
-.slider-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 3.2rem; gap: 14px; align-items: center; }
-.slider-row label { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); letter-spacing: 0.04em; }
-.slider-row output { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
-input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; }
-input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--orig), var(--styl)); }
-input[type="range"]::-moz-range-track { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--orig), var(--styl)); }
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none; width: 22px; height: 22px; margin-top: -8px;
-  border-radius: 50%; background: var(--surface); border: 2px solid var(--ink);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-}
-input[type="range"]::-moz-range-thumb {
-  width: 18px; height: 18px; border-radius: 50%; background: var(--surface); border: 2px solid var(--ink);
-}
-input[type="range"]:focus-visible { outline: 2px solid var(--orig); outline-offset: 2px; }
+    .strip li { margin: 0; font-size: 0.875rem; }
+    .strip svg { display: block; width: 100%; height: 5.5rem; margin-bottom: 0.25rem; }
+    .strip b { display: block; }
 
-.slider-row { row-gap: 2px; }
-.presets { grid-column: 2; position: relative; height: 22px; margin-top: -4px; }
-.presets button {
-  position: absolute; top: 0; left: calc(11px + var(--p) * (100% - 22px)); transform: translateX(-50%);
-  font: 500 0.7rem/1 var(--font-mono); color: var(--muted); background: none; border: 0;
-  padding: 4px 3px; cursor: pointer; font-variant-numeric: tabular-nums; white-space: nowrap;
-}
-.presets button:hover, .presets button[aria-pressed="true"] { color: var(--ink); }
-.toggles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); }
-.toggles label { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
-.toggles input[type="checkbox"] { accent-color: var(--orig); width: 15px; height: 15px; margin: 0; }
-.btn {
-  font: 600 var(--fs-xs)/1 var(--font-mono); letter-spacing: 0.04em;
-  color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 999px;
-  padding: 8px 14px; cursor: pointer; margin-left: auto;
-}
-.btn:hover { border-color: var(--ink); }
-.btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    details { margin: 1rem 0; }
+    summary { cursor: pointer; font-weight: 600; }
+    .demo { max-width: 30rem; margin: 1rem auto; }
+    .demo svg { width: 100%; height: 14rem; }
+    .slider-row, .presets, .toggles, .legend, .readouts {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem 0.75rem;
+    }
+    .presets { flex-basis: 100%; }
+    .toggles { margin-top: 0.5rem; }
+    .readouts { font-size: 0.875rem; }
+    .readouts dd { margin: 0; font-weight: 600; }
+    .legend svg { width: 24px; height: 10px; vertical-align: middle; }
+    .swatch-heat { display: inline-block; width: 24px; height: 8px; background: linear-gradient(to right, #eee, #b25b17); }
+    .m-sil { fill: #eee; }
+    .m-wire { fill: none; stroke: #aaa; stroke-width: 0.5; }
+    .m-outline, .m-ghost { fill: none; stroke: #333; stroke-width: 1.5; }
+    .m-ghost0 { stroke: #555; stroke-dasharray: 5 4; }
+    .m-ghost1 { stroke: #99601c; stroke-dasharray: 2 4; }
+    .m-heat { fill: #b25b17; }
+    .no-wire .m-wire { display: none; }
 
-.readouts { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); margin-top: 10px; }
-.readouts > div { padding: 12px 18px; border-left: 1px solid var(--line); min-width: 0; }
-.readouts > div:first-child { border-left: 0; }
-.readouts dt { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
-.readouts dd { margin: 2px 0 0; font-family: var(--font-mono); font-size: 1.02rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-.readouts dd small { font-weight: 400; color: var(--muted); font-size: 0.72rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      border-bottom: 1px solid #ddd;
+      padding: 0.5rem;
+      text-align: left;
+      vertical-align: top;
+    }
 
-.demo figcaption { padding: 14px 18px 18px; border-top: 1px solid var(--line); font-size: 0.98rem; line-height: 1.5; color: var(--muted); display: grid; gap: 10px; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink); }
-.legend span { display: inline-flex; align-items: center; gap: 7px; }
-.legend svg { width: 24px; height: 10px; flex: none; }
-.swatch-heat { width: 28px; height: 10px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--styl)); border: 1px solid var(--line); }
+    @media (max-width: 900px) {
+      .container { width: min(calc(100% - 2rem), 42rem); padding: 2rem 0; }
+    }
 
-/* Mesh drawing */
-.m-sil { fill: var(--mesh); }
-.m-heat { fill: var(--styl); stroke: none; }
-.m-wire { fill: none; stroke: var(--wire); stroke-width: 0.6; vector-effect: non-scaling-stroke; }
-.no-wire .m-wire { display: none; }
-.m-outline { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.m-ghost { fill: none; stroke-width: 1.4; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.m-ghost0 { stroke: var(--orig); stroke-dasharray: 5 4; }
-.m-ghost1 { stroke: var(--styl); stroke-dasharray: 2 4; }
-.m-feat { fill: var(--ink); }
-.m-nose { fill: var(--styl-ink); }
-
-/* ---------- Body layout ---------- */
-.layout { display: grid; grid-template-columns: minmax(0, 1fr); }
-.rail { display: none; }
-@media (min-width: 1100px) {
-  .layout { grid-template-columns: 200px minmax(0, 1fr); gap: 72px; }
-  .rail { display: block; position: sticky; top: 32px; align-self: start; padding-top: 60px; }
-}
-.rail ol { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 2px; counter-reset: s; }
-.rail li { counter-increment: s; }
-.rail a {
-  display: grid; grid-template-columns: 1.6rem 1fr; padding: 7px 0; text-decoration: none;
-  color: var(--muted); font-family: var(--font-display); font-size: 0.98rem; font-weight: 500; line-height: 1.3;
-}
-.rail a::before { content: counter(s); font-family: var(--font-mono); font-size: var(--fs-xs); padding-top: 2px; }
-.rail a:hover, .rail a[aria-current="true"] { color: var(--ink); }
-.rail a[aria-current="true"]::before { color: var(--orig); font-weight: 600; }
-
-main { min-width: 0; }
-main > section > * { max-width: 780px; }
-main > section > .wide { max-width: none; }
-
-section { padding-block: 60px 12px; border-bottom: 1px solid var(--line); }
-section:last-of-type { border-bottom: 0; }
-.sec-head { display: flex; align-items: baseline; gap: 16px; margin: 0 0 28px; }
-.sec-num { font-family: var(--font-mono); font-size: 1rem; font-weight: 600; color: var(--orig); }
-h2 { margin: 0; font-family: var(--font-display); font-size: var(--fs-h2); font-weight: 650; line-height: 1.12; letter-spacing: -0.01em; }
-h3 {
-  margin: 44px 0 14px; font-family: var(--font-display); font-size: var(--fs-h3); font-weight: 620; line-height: 1.25;
-  display: flex; gap: 12px; align-items: baseline;
-}
-h3 .n { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 600; color: var(--muted); letter-spacing: 0.04em; }
-section p { margin: 0 0 18px; }
-section ul { margin: 0 0 18px; padding-left: 1.2em; }
-section li { margin-bottom: 4px; }
-section li::marker { color: var(--muted); }
-
-/* Research question */
-.question { margin: 30px 0; padding-block: 20px; border-block: 1px solid var(--line); }
-.question p { margin: 8px 0 0; font-size: clamp(1.35rem, 1.15rem + 0.8vw, 1.7rem); font-style: italic; line-height: 1.35; }
-
-/* α scale */
-.ascale { margin: 22px 0 28px; }
-.ascale-bar { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--orig), var(--styl)); position: relative; }
-.ascale-bar i { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--surface); border: 2px solid var(--ink); }
-.ascale-stops { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; gap: 12px; }
-.ascale-stops div { display: grid; gap: 2px; font-size: 1rem; line-height: 1.35; }
-.ascale-stops div:nth-child(2) { text-align: center; }
-.ascale-stops div:nth-child(3) { text-align: right; }
-.ascale-stops b { font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 600; }
-
-/* Equations */
-.eq { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: baseline; margin: 6px 0 10px; padding: 14px 0; overflow-x: auto; }
-.eq .math { font-size: 1.32rem; }
-.eq .eqn { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); }
-
-/* Failure modes */
-.fails { list-style: none; padding: 0; margin: 4px 0 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px; }
-.fails li { margin: 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 1rem; line-height: 1.35; display: grid; gap: 4px; }
-.fails b { font-family: var(--font-display); font-weight: 620; font-size: 1rem; }
-.fails span { color: var(--muted); font-size: 0.95rem; }
-
-/* Diagram */
-figure { margin: 0; }
-.diagram { margin: 10px 0 26px; }
-.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.diagram svg { display: block; width: 100%; min-width: 640px; height: auto; color: var(--ink); }
-.diagram figcaption, .strip figcaption { margin-top: 12px; font-size: 0.98rem; color: var(--muted); max-width: 780px; }
-.d-box { fill: var(--surface); stroke: var(--ink); stroke-width: 1.2; }
-.d-box.hl { fill: var(--tint); stroke: var(--orig); stroke-width: 2; }
-.d-pill { fill: var(--bg); stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
-.d-line { fill: none; stroke: var(--ink); stroke-width: 1.3; }
-.d-head { fill: var(--ink); }
-.d-title { font-family: var(--font-display); font-weight: 620; font-size: 12.5px; fill: var(--ink); }
-.d-math { font-family: var(--font-body); font-style: italic; font-size: 14.5px; fill: var(--ink); }
-.d-math .r { font-style: normal; }
-.d-sub { font-size: 10px; }
-.d-big { font-family: var(--font-body); font-style: italic; font-size: 23px; fill: var(--ink); }
-.d-label { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
-.d-note { font-family: var(--font-body); font-size: 12.5px; fill: var(--muted); }
-
-.components { display: grid; gap: 18px 28px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); margin: 4px 0 22px; }
-.components div { display: grid; gap: 6px; align-content: start; }
-.components h4 { margin: 0; font-family: var(--font-display); font-size: 1.05rem; font-weight: 620; }
-.components p { margin: 0; font-size: 1.02rem; line-height: 1.5; }
-
-/* Goals */
-.outcome { margin: 0 0 8px; padding: 20px 22px; background: var(--tint); border: 1px solid var(--line); border-radius: var(--radius); }
-.outcome p { margin: 8px 0 0; font-size: 1.12rem; }
-.items { list-style: none; margin: 0 0 12px; padding: 0; }
-.item { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr); gap: 4px 14px; padding-block: 22px; border-top: 1px solid var(--line); margin: 0; }
-.item:last-child { border-bottom: 1px solid var(--line); }
-.item > div { min-width: 0; }
-.tag {
-  justify-self: start; align-self: start; margin-top: 3px;
-  font-family: var(--font-mono); font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.04em; line-height: 1.5;
-  color: var(--orig); border: 1px solid currentColor; border-radius: 999px; padding: 1px 8px; white-space: nowrap;
-}
-.tag.s { color: var(--styl-ink); }
-.item h4 { margin: 0 0 6px; font-family: var(--font-display); font-size: 1.18rem; font-weight: 620; line-height: 1.25; }
-.item p { margin: 0 0 10px; }
-.item ul { margin: 0 0 12px; }
-.out { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: baseline; font-size: 1.02rem; line-height: 1.45; }
-.out .label { font-size: 0.7rem; }
-
-.strip { margin: 8px 0 26px; }
-.strip ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
-.strip li { margin: 0; display: grid; gap: 6px; align-content: start; }
-.strip svg { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
-.strip b { font-family: var(--font-mono); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
-.strip span { font-size: 0.95rem; line-height: 1.35; color: var(--muted); }
-.strip .mini .m-wire { stroke-width: 0.45; }
-@media (max-width: 560px) {
-  .strip ol { grid-template-columns: minmax(0, 1fr); }
-  .strip li { grid-template-columns: 76px auto minmax(0, 1fr); align-items: center; gap: 12px; }
-}
-
-.tablewrap { overflow-x: auto; margin: 4px 0 18px; }
-table { border-collapse: collapse; width: 100%; font-size: 1.02rem; line-height: 1.45; }
-th, td { text-align: left; vertical-align: top; padding: 12px 14px 12px 0; border-bottom: 1px solid var(--line); }
-thead th { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding-top: 0; }
-tbody th { font-family: var(--font-display); font-weight: 620; font-size: 1rem; white-space: nowrap; padding-right: 22px; }
-@media (max-width: 560px) {
-  thead { display: none; }
-  table, tbody, tr, tbody th, td { display: block; }
-  tr { padding-block: 12px; border-bottom: 1px solid var(--line); }
-  tbody th, td { padding: 0; border: 0; }
-  tbody th { margin-bottom: 4px; }
-}
-
-.questions { list-style: none; margin: 6px 0 22px; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
-.questions li { margin: 0; display: grid; gap: 8px; align-content: start; padding-top: 14px; border-top: 2px solid var(--ink); }
-.questions h4 { margin: 0; font-family: var(--font-display); font-size: 1.08rem; font-weight: 620; display: flex; gap: 10px; align-items: baseline; }
-.questions h4 .label { font-weight: 600; color: var(--orig); }
-.questions p { margin: 0; font-size: 1.02rem; line-height: 1.45; }
-
-/* Schedule */
-.timeline { position: relative; padding-block: 32px; margin: 8px 0 22px; }
-.tl-bar { display: grid; grid-template-columns: 7fr 7fr 7fr 5fr; height: 42px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
-.tl-seg { display: flex; align-items: center; gap: 8px; padding: 0 10px; border-left: 1px solid var(--line); white-space: nowrap; overflow: hidden; font-family: var(--font-mono); font-size: 0.74rem; color: var(--muted); }
-.tl-seg:first-child { border-left: 0; }
-.tl-seg b { color: var(--ink); font-weight: 600; }
-/* Ticks sit outside the bar so they never cross the week labels */
-.tl-mark { position: absolute; left: var(--x); width: 0; height: 12px; color: var(--ink); border-left: 2px solid currentColor; transform: translateX(-1px); }
-.tl-mark.hot { color: var(--styl); }
-.tl-mark.up { top: 20px; }
-.tl-mark.down { top: 76px; }
-.tl-mark::after { content: ""; position: absolute; left: -6px; width: 6px; height: 6px; border-radius: 50%; background: var(--surface); border: 2px solid currentColor; }
-.tl-mark.up::after { bottom: -5px; }
-.tl-mark.down::after { top: -5px; }
-.tl-mark span { position: absolute; left: 0; transform: translateX(-50%); white-space: nowrap; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); line-height: 1.2; }
-.tl-mark span b { color: var(--ink); font-weight: 600; }
-.tl-mark.up span { bottom: calc(100% + 3px); }
-.tl-mark.down span { top: calc(100% + 3px); }
-.tl-mark.end span { left: auto; right: 0; transform: none; padding-right: 4px; }
-.tl-mark.start span { transform: none; padding-left: 4px; }
-@media (max-width: 600px) { .tl-seg span { display: none; } }
-
-.weeks { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); }
-.week { margin: 0; display: flex; flex-direction: column; gap: 10px; padding: 20px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-.week header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
-.week .when { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
-.week .goals { margin-left: auto; display: flex; gap: 6px; }
-.week .goals .tag { margin-top: 0; font-size: 0.68rem; padding: 0 7px; }
-.week h4 { margin: 0; font-family: var(--font-display); font-size: 1.15rem; font-weight: 620; line-height: 1.25; }
-.week ul { margin: 0; padding-left: 1.1em; font-size: 1.02rem; line-height: 1.45; }
-.week li { margin-bottom: 5px; }
-.week .due { color: var(--styl-ink); font-weight: 600; }
-.week footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); font-size: 1rem; line-height: 1.45; display: grid; gap: 2px; }
-
-/* Resources */
-.refs { list-style: none; margin: 0 0 12px; padding: 0; }
-.ref { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: 4px 12px; padding-block: 16px; border-top: 1px solid var(--line); margin: 0; }
-.ref:last-child { border-bottom: 1px solid var(--line); }
-.ref .num { font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); padding-top: 3px; }
-.ref .cite { margin: 0; }
-.ref .cite a { font-weight: 600; }
-.ref .venue { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); white-space: nowrap; }
-.ref .why { margin: 6px 0 0; font-size: 1.02rem; color: var(--muted); line-height: 1.5; }
-.tools { margin: 0 0 18px; display: grid; }
-.tools > div { display: grid; grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); gap: 4px 18px; padding-block: 11px; border-top: 1px solid var(--line); align-items: baseline; }
-.tools > div:last-child { border-bottom: 1px solid var(--line); }
-.tools dt { font-family: var(--font-display); font-weight: 620; font-size: 1rem; }
-.tools dd { margin: 0; font-size: 1.02rem; line-height: 1.45; }
-@media (max-width: 560px) { .tools > div { grid-template-columns: minmax(0, 1fr); } }
-
-/* Footer */
-.foot { border-top: 1px solid var(--line); margin-top: 40px; }
-.foot .wrap { display: flex; flex-wrap: wrap; gap: 10px 32px; justify-content: space-between; padding-block: 26px 40px; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--muted); }
-.foot a { overflow-wrap: anywhere; }
-
-@media (max-width: 520px) {
-  .meta > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
-  .readouts > div { padding: 10px 12px; }
-  .readouts dd { font-size: 0.92rem; }
-  .ascale-stops div { font-size: 0.92rem; }
-  .item { grid-template-columns: minmax(0, 1fr); }
-  .ref { grid-template-columns: minmax(0, 1fr); }
-}
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { transition: none !important; animation: none !important; }
-}
-
-/* ---------- Print (Safari: File > Print > Save as PDF) ---------- */
-@media print {
-  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
-    --bg: #FFFFFF; --surface: #FFFFFF; --ink: #132322; --muted: #4E615E; --line: #CBD6D4;
-    --orig: #17707A; --styl: #D4501F; --styl-ink: #B23F12; --tint: #EEF4F3;
-    --mesh: #E1EBE9; --wire: #A7BAB7; --grid: #FFFFFF;
-    color-scheme: light;
-  }
-  @page { size: letter; margin: 0.55in 0.6in; }
-  html { font-size: 12.5px; }
-  body { background: #FFFFFF; }
-  .rail, .controls, .presets, .btn { display: none !important; }
-  .layout { display: block; }
-  .hero-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; padding-block: 24px 28px; }
-  .demo { box-shadow: none; }
-  .viewport svg { max-height: 300px; }
-  section { padding-block: 26px 4px; }
-  .diagram svg { min-width: 0; }
-  .item, .week, .ref, .question, .outcome, figure, tr, .fails li, .questions li, .components div, .eq { break-inside: avoid; }
-  h2, h3, .sec-head { break-after: avoid; }
-  .weeks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  a { color: var(--orig); }
-}
-</style>
+    @media print {
+      .container { width: auto; padding: 0; }
+      h2, h3, h4 { break-after: avoid; }
+      figure, tr { break-inside: avoid; }
+      .diagram svg { min-width: 0; }
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <header>
+      <h1>StyleSlider</h1>
+      <p><strong>Controllable Geometric Stylization of 3D Meshes</strong></p>
+      <p>CS 184/284A Final Project Proposal · Fall 2026</p>
+      <p><strong>Team members</strong><br>Sho Tsunoda, Heekyung Lee, Ken Zheng, and Yuxiang Liu</p>
+    </header>
 
-<header class="hero">
-  <div class="wrap">
-    <div class="topbar">
-      <span class="label">CS 184/284A · Computer Graphics · Fall 2026</span>
-      <nav class="toplinks" aria-label="Project links">
-        <a href="284_Final_Project_Proposal%20(1).pdf">Proposal write-up (PDF)</a>
-        <a href="https://github.com/Xiang-Foothill/cs184-final-project">GitHub repository</a>
-      </nav>
-    </div>
-
-    <div class="hero-grid">
-      <div class="hero-text">
-        <p class="kicker label">Final project proposal</p>
-        <h1 class="title" id="title">Style<span class="slide">Slider</span></h1>
-        <p class="subtitle">Controllable Geometric Stylization of 3D Meshes</p>
-        <p class="summary">
-          Diffusion-guided 3D stylization can exaggerate a mesh’s proportions, elongate its features, and make it look cartoon-like, but it gives little control over how much the shape changes.
-          StyleSlider is an interactive system that lets a user dial geometric stylization continuously, from the original mesh at <span class="math">α</span>&nbsp;=&nbsp;0 to a fully stylized target at <span class="math">α</span>&nbsp;=&nbsp;1, by interpolating vertex deformation fields or cage control points.
-          We will study how to keep the in-between shapes smooth, predictable, and geometrically valid.
+    <main>
+      <section aria-labelledby="summary">
+        <h2 id="summary">Summary</h2>
+        <p>Diffusion-guided 3D stylization can exaggerate a mesh’s proportions, elongate its features, and make it look cartoon-like, but it gives little control over how much the shape changes. StyleSlider is an interactive system that lets a user dial geometric stylization continuously, from the original mesh at <var>α</var> = 0 to a fully stylized target at <var>α</var> = 1, by interpolating vertex deformation fields or cage control points. We will study how to keep the in-between shapes smooth, predictable, and geometrically valid.</p>
+        <p class="project-links">
+          <a href="https://xiang-foothill.github.io/cs184-final-project/proposal-website/">Proposal webpage</a> ·
+          <a href="https://github.com/Xiang-Foothill/cs184-final-project">GitHub repository</a> ·
+          <a href="284_Final_Project_Proposal%20(1).pdf">Proposal write-up (PDF)</a>
         </p>
-        <dl class="meta">
-          <div>
-            <dt class="label">Team</dt>
-            <dd><ul class="team"><li>Sho Tsunoda</li><li>Heekyung Lee</li><li>Ken Zheng</li><li>Yuxiang Liu</li></ul></dd>
-          </div>
-          <div>
-            <dt class="label">Webpage</dt>
-            <dd><a data-page-url href="https://xiang-foothill.github.io/cs184-final-project/proposal-website/">xiang-foothill.github.io/cs184-final-project/proposal-website</a></dd>
-          </div>
-        </dl>
-      </div>
+      </section>
 
-      <figure class="demo" aria-labelledby="demo-cap">
-        <div class="viewport" id="viewport">
-          <div class="hud hud-l">toy_cat · <span data-count="v">433</span> verts · <span data-count="t">768</span> tris</div>
-          <div class="hud hud-r" id="hud-alpha">α = 0.50</div>
-          <svg id="demo" role="img" aria-label="A 2D toy cat-head mesh drawn between its original shape and a stylized target with taller ears, wider cheeks, and a pointed chin. The slider sets how far each vertex has moved toward the target."></svg>
+      <!-- 1. Problem description -->
+      <section id="problem" aria-labelledby="problem-h">
+        <h2 id="problem-h">1. Problem description</h2>
+
+        <p>
+          Geometric stylization changes the actual shape of a 3D object. Traditional style transfer mostly changes colors and textures; geometric stylization changes silhouettes and proportions. It matters for animation, character design, digital sculpting, and artistic 3D modeling.
+        </p>
+        <p>
+          Recent methods such as GeoStyle&nbsp;<a href="#ref-1">[1]</a> show that diffusion models can guide large geometric changes while keeping an object’s semantic identity. A character’s limbs can become elongated, its head exaggerated, or its silhouette reshaped to match a reference artistic style.
+        </p>
+        <p>
+          These methods run an optimization that produces one stylized result. They give no direct, predictable control over how much the shape is exaggerated, and a user may want a moderate transformation instead of the strongest output. Re-running the optimization with different parameters is expensive and can give inconsistent results.
+        </p>
+
+        <p><strong>Research question.</strong> Can we create a continuous and intuitive control over geometric stylization strength while maintaining smooth and valid mesh deformation?</p>
+
+        <h3>1.1 Approach: one strength parameter</h3>
+        <p>
+          We add an explicit stylization parameter <var>α</var> ∈ [0,&nbsp;1]. Instead of running a diffusion model again for every strength, we interpolate between the original mesh and its stylized deformation.
+        </p>
+        <ul>
+          <li><var>α</var> = 0: original mesh</li>
+          <li><var>α</var> = 0.5: intermediate stylization</li>
+          <li><var>α</var> = 1: fully stylized target</li>
+        </ul>
+
+        <p>
+          For an original mesh with vertices <var>V<sub>0</sub></var> and a stylized mesh <var>V<sub>1</sub></var> with the same topology, the basic interpolation moves every vertex along its own displacement:
+        </p>
+        <div class="equation">
+          <var>V(α) = V<sub>0</sub> + α&thinsp;(V<sub>1</sub> − V<sub>0</sub>)</var>
+          <span class="equation-number">(1)</span>
         </div>
-        <div class="controls">
-          <div class="slider-row">
-            <label for="alpha">Strength α</label>
-            <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.5" aria-describedby="demo-cap">
-            <output id="alpha-out" for="alpha">0.50</output>
-            <div class="presets" id="presets" role="group" aria-label="Jump to a planned strength">
-              <button type="button" data-a="0" style="--p:0">0%</button>
-              <button type="button" data-a="0.25" style="--p:0.25">25%</button>
-              <button type="button" data-a="0.5" style="--p:0.5">50%</button>
-              <button type="button" data-a="0.75" style="--p:0.75">75%</button>
-              <button type="button" data-a="1" style="--p:1">100%</button>
+        <p>
+          We will also interpolate the control points of a coarse deformation cage, then pass the motion to the enclosed mesh through cage weights <var>w<sub>j</sub></var> computed once on the original mesh. A cage is a lower-dimensional representation, so it may give smoother and more coherent shape changes than moving every vertex directly.
+        </p>
+        <div class="equation">
+          <var>c(α) = c<sub>0</sub> + α&thinsp;(c<sub>1</sub> − c<sub>0</sub>)</var>
+          <var>v(α) = ∑<sub>j</sub> w<sub>j</sub>&thinsp;c<sub>j</sub>(α)</var>
+          <span class="equation-number">(2)</span>
+        </div>
+
+        <details>
+          <summary>Try the 2D concept sketch</summary>
+          <figure class="demo" aria-labelledby="demo-cap">
+            <div>toy_cat · <span data-count="v">433</span> verts · <span data-count="t">768</span> tris</div>
+            <svg id="demo" role="img" aria-label="A 2D toy cat-head mesh drawn between its original shape and a stylized target with taller ears, wider cheeks, and a pointed chin. The slider sets how far each vertex has moved toward the target."></svg>
+            <div>
+              <div class="slider-row">
+                <label for="alpha">Strength α</label>
+                <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.5" aria-describedby="demo-cap">
+                <output id="alpha-out" for="alpha">0.50</output>
+                <div class="presets" id="presets" role="group" aria-label="Jump to a planned strength">
+                  <button type="button" data-a="0">0%</button>
+                  <button type="button" data-a="0.25">25%</button>
+                  <button type="button" data-a="0.5">50%</button>
+                  <button type="button" data-a="0.75">75%</button>
+                  <button type="button" data-a="1">100%</button>
+                </div>
+              </div>
+              <div class="toggles">
+                <label for="wire"><input type="checkbox" id="wire" checked> Wireframe</label>
+                <label for="heat"><input type="checkbox" id="heat"> Edge stretch</label>
+                <button type="button" id="play" aria-pressed="false">Play</button>
+              </div>
             </div>
+            <dl class="readouts">
+              <div><dt>Mean displacement</dt><dd id="r-disp">0.0% <small>of width</small></dd></div>
+              <div><dt>Max edge stretch</dt><dd id="r-stretch">1.00×</dd></div>
+              <div><dt>Flipped triangles</dt><dd id="r-flip">0 <small>/ 768</small></dd></div>
+            </dl>
+            <figcaption id="demo-cap">
+              <div class="legend">
+                <span><svg viewBox="0 0 24 10" aria-hidden="true"><line class="m-ghost m-ghost0" x1="0" y1="5" x2="24" y2="5"/></svg>α = 0 original</span>
+                <span><svg viewBox="0 0 24 10" aria-hidden="true"><line class="m-ghost m-ghost1" x1="0" y1="5" x2="24" y2="5"/></svg>α = 1 stylized target</span>
+                <span id="heat-key" hidden><i class="swatch-heat" aria-hidden="true"></i>edge stretch 1× → 2×</span>
+              </div>
+              This 2D toy mesh illustrates the proposed interaction. Every vertex moves on its own straight line from <var>V<sub>0</sub></var> to <var>V<sub>1</sub></var> (equation 1). The readouts preview metrics we will report.
+            </figcaption>
+          </figure>
+        </details>
+
+        <h3>1.2 Why this is hard</h3>
+        <p>
+          Interpolation does not guarantee good geometry. Intermediate meshes can show the failures below, and an equal step in <var>α</var> may not look like an equal step in exaggeration. We will measure how stylization strength relates to geometric quality and to how exaggerated the shape looks.
+        </p>
+        <ul>
+          <li><strong>Unwanted stretching.</strong> Edges grow far past their rest length.</li>
+          <li><strong>Self-intersections.</strong> Parts of the surface pass through each other.</li>
+          <li><strong>Collapsed triangles.</strong> Faces become degenerate or flip.</li>
+          <li><strong>Uneven deformation.</strong> Some regions change abruptly while others barely move.</li>
+        </ul>
+        <p>
+          The project focuses on geometric deformation and interactive graphics. We are not training a new generative model. We start from precomputed stylized meshes, including compatible examples from existing methods, so the core project does not depend on reproducing a diffusion pipeline.
+        </p>
+
+        <h3>1.3 System pipeline</h3>
+        <figure class="diagram">
+          <div class="scroll">
+            <svg viewBox="0 0 820 300" role="img" aria-label="Pipeline. A mesh pair, V0 original and V1 stylized with the same topology, feeds two methods: A, vertex interpolation, using the displacement V1 minus V0, and B, cage interpolation, using fitted cages. The slider value alpha drives both. Each produces the deformed mesh V of alpha, which the interactive viewer renders and the evaluation measures.">
+              <defs>
+                <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path class="d-head" d="M0 0L10 5L0 10z"/>
+                </marker>
+              </defs>
+
+              <!-- Input pair -->
+              <rect class="d-box" x="10" y="40" width="140" height="236" rx="10"/>
+              <text class="d-title" x="80" y="124" text-anchor="middle">Mesh pair</text>
+              <text class="d-math" x="80" y="152" text-anchor="middle">V<tspan class="d-sub" dy="4">0</tspan><tspan class="r" dy="-4" dx="2">original</tspan></text>
+              <text class="d-math" x="80" y="176" text-anchor="middle">V<tspan class="d-sub" dy="4">1</tspan><tspan class="r" dy="-4" dx="2">stylized</tspan></text>
+              <text class="d-note" x="80" y="204" text-anchor="middle">same topology,</text>
+              <text class="d-note" x="80" y="221" text-anchor="middle">precomputed</text>
+
+              <!-- Input to methods -->
+              <path class="d-line" d="M150 76H268" marker-end="url(#arr)"/>
+              <text class="d-label" x="210" y="66" text-anchor="middle">D = V₁ − V₀</text>
+              <path class="d-line" d="M150 230H268" marker-end="url(#arr)"/>
+              <text class="d-label" x="210" y="250" text-anchor="middle">fit cages</text>
+
+              <!-- Method A -->
+              <rect class="d-box" x="270" y="40" width="190" height="72" rx="10"/>
+              <text class="d-title" x="365" y="68" text-anchor="middle">A · Vertex interpolation</text>
+              <text class="d-math" x="365" y="94" text-anchor="middle">V<tspan class="d-sub" dy="4">0</tspan><tspan dy="-4"> + α(V</tspan><tspan class="d-sub" dy="4">1</tspan><tspan dy="-4"> − V</tspan><tspan class="d-sub" dy="4">0</tspan><tspan dy="-4">)</tspan></text>
+
+              <!-- alpha pill -->
+              <rect class="d-pill" x="310" y="133" width="110" height="30" rx="15"/>
+              <text class="d-label" x="365" y="152" text-anchor="middle">α from slider</text>
+              <path class="d-line" d="M365 133V115" marker-end="url(#arr)"/>
+              <path class="d-line" d="M365 163V181" marker-end="url(#arr)"/>
+
+              <!-- Method B -->
+              <rect class="d-box" x="270" y="184" width="190" height="92" rx="10"/>
+              <text class="d-title" x="365" y="210" text-anchor="middle">B · Cage interpolation</text>
+              <text class="d-math" x="365" y="236" text-anchor="middle">c(α) = c<tspan class="d-sub" dy="4">0</tspan><tspan dy="-4"> + α(c</tspan><tspan class="d-sub" dy="4">1</tspan><tspan dy="-4"> − c</tspan><tspan class="d-sub" dy="4">0</tspan><tspan dy="-4">)</tspan></text>
+              <text class="d-math" x="365" y="260" text-anchor="middle">v(α) = <tspan class="r">∑</tspan> w<tspan class="d-sub" dy="4">j</tspan><tspan dy="-4"> c</tspan><tspan class="d-sub" dy="4">j</tspan><tspan dy="-4">(α)</tspan></text>
+
+              <!-- Methods to V(alpha) -->
+              <path class="d-line" d="M460 76H482V146H498" marker-end="url(#arr)"/>
+              <path class="d-line" d="M460 230H482V170H498" marker-end="url(#arr)"/>
+
+              <rect class="d-box hl" x="500" y="126" width="90" height="64" rx="10"/>
+              <text class="d-big" x="545" y="158" text-anchor="middle">V(α)</text>
+              <text class="d-note" x="545" y="177" text-anchor="middle">deformed mesh</text>
+
+              <!-- V(alpha) to outputs -->
+              <path class="d-line" d="M590 146H622V76H668" marker-end="url(#arr)"/>
+              <text class="d-label" x="645" y="66" text-anchor="middle">render</text>
+              <path class="d-line" d="M590 170H622V230H668" marker-end="url(#arr)"/>
+              <text class="d-label" x="645" y="250" text-anchor="middle">measure</text>
+
+              <rect class="d-box" x="670" y="40" width="140" height="72" rx="10"/>
+              <text class="d-title" x="740" y="68" text-anchor="middle">Interactive viewer</text>
+              <text class="d-note" x="740" y="92" text-anchor="middle">slider · orbit · zoom</text>
+
+              <rect class="d-box" x="670" y="184" width="140" height="92" rx="10"/>
+              <text class="d-title" x="740" y="210" text-anchor="middle">Evaluation</text>
+              <text class="d-note" x="740" y="234" text-anchor="middle">validity · smoothness</text>
+              <text class="d-note" x="740" y="254" text-anchor="middle">monotonicity · timing</text>
+            </svg>
           </div>
-          <div class="toggles">
-            <label for="wire"><input type="checkbox" id="wire" checked> Wireframe</label>
-            <label for="heat"><input type="checkbox" id="heat"> Edge stretch</label>
-            <button type="button" class="btn" id="play" aria-pressed="false">Play</button>
-          </div>
-        </div>
-        <dl class="readouts" aria-live="polite">
-          <div><dt>Mean displacement</dt><dd id="r-disp">0.0% <small>of width</small></dd></div>
-          <div><dt>Max edge stretch</dt><dd id="r-stretch">1.00×</dd></div>
-          <div><dt>Flipped triangles</dt><dd id="r-flip">0 <small>/ 768</small></dd></div>
-        </dl>
-        <figcaption id="demo-cap">
-          <div class="legend">
-            <span><svg viewBox="0 0 24 10" aria-hidden="true"><line class="m-ghost m-ghost0" x1="0" y1="5" x2="24" y2="5"/></svg>α = 0 original</span>
-            <span><svg viewBox="0 0 24 10" aria-hidden="true"><line class="m-ghost m-ghost1" x1="0" y1="5" x2="24" y2="5"/></svg>α = 1 stylized target</span>
-            <span id="heat-key" hidden><i class="swatch-heat" aria-hidden="true"></i>edge stretch 1× → 2×</span>
-          </div>
-          <span>Concept sketch on a 2D toy mesh, not project results. Every vertex moves on its own straight line from <span class="math">V<sub>0</sub></span> to <span class="math">V<sub>1</sub></span> (equation 1). The readouts preview metrics we will report.</span>
-        </figcaption>
-      </figure>
-    </div>
-  </div>
-</header>
+          <figcaption>Both methods read the same mesh pair and the same <var>α</var>, so their outputs can be compared under identical conditions. Geometry updates are kept separate from rendering.</figcaption>
+        </figure>
 
-<div class="wrap layout">
-  <nav class="rail" aria-label="Proposal sections">
-    <span class="label">Contents</span>
-    <ol>
-      <li><a href="#problem">Problem description</a></li>
-      <li><a href="#goals">Goals and deliverables</a></li>
-      <li><a href="#schedule">Schedule</a></li>
-      <li><a href="#resources">Resources</a></li>
-    </ol>
-  </nav>
+        <ul>
+          <li><strong>Mesh processing.</strong> Load original and stylized meshes, verify vertex correspondence, compute vertex displacements, and build deformation cages where needed.</li>
+          <li><strong>Deformation algorithms.</strong> Vertex interpolation as the main baseline; cage interpolation as the second method, with precomputed weights that carry control-point motion to the mesh.</li>
+          <li><strong>Interactive rendering.</strong> A viewer that updates vertex positions as the user drags the strength slider. Existing libraries handle file loading, rendering, and geometric analysis.</li>
+        </ul>
+      </section>
 
-  <main id="main">
+      <!-- 2. Goals and deliverables -->
+      <section id="goals" aria-labelledby="goals-h">
+        <h2 id="goals-h">2. Goals and deliverables</h2>
 
-    <!-- 1. Problem description -->
-    <section id="problem" aria-labelledby="problem-h">
-      <div class="sec-head"><span class="sec-num">1</span><h2 id="problem-h">Problem description</h2></div>
+        <p><strong>Minimum successful outcome.</strong> A stable slider-based system with direct vertex interpolation, a working cage-based comparison, and documented quality and performance measurements. Advanced interpolation and perceptual control come after that, if time permits.</p>
 
-      <p>
-        Geometric stylization changes the actual shape of a 3D object. Traditional style transfer mostly changes colors and textures; geometric stylization changes silhouettes and proportions. It matters for animation, character design, digital sculpting, and artistic 3D modeling.
-      </p>
-      <p>
-        Recent methods such as GeoStyle&nbsp;<a href="#ref-1">[1]</a> show that diffusion models can guide large geometric changes while keeping an object’s semantic identity. A character’s limbs can become elongated, its head exaggerated, or its silhouette reshaped to match a reference artistic style.
-      </p>
-      <p>
-        These methods run an optimization that produces one stylized result. They give no direct, predictable control over how much the shape is exaggerated, and a user may want a moderate transformation instead of the strongest output. Re-running the optimization with different parameters is expensive and can give inconsistent results.
-      </p>
-
-      <div class="question">
-        <span class="label">Research question</span>
-        <p>Can we create a continuous and intuitive control over geometric stylization strength while maintaining smooth and valid mesh deformation?</p>
-      </div>
-
-      <h3><span class="n">1.1</span>Approach: one strength parameter</h3>
-      <p>
-        We add an explicit stylization parameter <span class="math">α</span> ∈ [0,&nbsp;1]. Instead of running a diffusion model again for every strength, we interpolate between the original mesh and its stylized deformation.
-      </p>
-      <div class="ascale" aria-label="The stylization parameter alpha runs from 0, the original mesh, through 0.5, an intermediate stylization, to 1, the fully stylized target.">
-        <div class="ascale-bar"><i style="left:0%"></i><i style="left:50%"></i><i style="left:100%"></i></div>
-        <div class="ascale-stops">
-          <div><b>α = 0</b>Original mesh</div>
-          <div><b>α = 0.5</b>Intermediate stylization</div>
-          <div><b>α = 1</b>Fully stylized target</div>
-        </div>
-      </div>
-
-      <p>
-        For an original mesh with vertices <span class="math">V<sub>0</sub></span> and a stylized mesh <span class="math">V<sub>1</sub></span> with the same topology, the basic interpolation moves every vertex along its own displacement:
-      </p>
-      <div class="eq">
-        <span class="math">V(α) = V<sub>0</sub> + α&thinsp;(V<sub>1</sub> − V<sub>0</sub>)</span>
-        <span class="eqn">(1)</span>
-      </div>
-      <p>
-        We will also interpolate the control points of a coarse deformation cage, then pass the motion to the enclosed mesh through cage weights <span class="math">w<sub>j</sub></span> computed once on the original mesh. A cage is a lower-dimensional representation, so it may give smoother and more coherent shape changes than moving every vertex directly.
-      </p>
-      <div class="eq">
-        <span class="math">c(α) = c<sub>0</sub> + α&thinsp;(c<sub>1</sub> − c<sub>0</sub>), &nbsp;&nbsp; v(α) = <span class="up">∑</span><sub>j</sub> w<sub>j</sub>&thinsp;c<sub>j</sub>(α)</span>
-        <span class="eqn">(2)</span>
-      </div>
-
-      <h3><span class="n">1.2</span>Why this is hard</h3>
-      <p>
-        Interpolation does not guarantee good geometry. Intermediate meshes can show the failures below, and an equal step in <span class="math">α</span> may not look like an equal step in exaggeration. We will measure how stylization strength relates to geometric quality and to how exaggerated the shape looks.
-      </p>
-      <ul class="fails">
-        <li><b>Unwanted stretching</b><span>Edges grow far past their rest length.</span></li>
-        <li><b>Self-intersections</b><span>Parts of the surface pass through each other.</span></li>
-        <li><b>Collapsed triangles</b><span>Faces become degenerate or flip.</span></li>
-        <li><b>Uneven deformation</b><span>Some regions change abruptly while others barely move.</span></li>
-      </ul>
-      <p>
-        The project focuses on geometric deformation and interactive graphics. We are not training a new generative model. We start from precomputed stylized meshes, including compatible examples from existing methods, so the core project does not depend on reproducing a diffusion pipeline.
-      </p>
-
-      <h3><span class="n">1.3</span>System pipeline</h3>
-      <figure class="diagram wide">
-        <div class="scroll">
-          <svg viewBox="0 0 820 300" role="img" aria-label="Pipeline. A mesh pair, V0 original and V1 stylized with the same topology, feeds two methods: A, vertex interpolation, using the displacement V1 minus V0, and B, cage interpolation, using fitted cages. The slider value alpha drives both. Each produces the deformed mesh V of alpha, which the interactive viewer renders and the evaluation measures.">
-            <defs>
-              <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path class="d-head" d="M0 0L10 5L0 10z"/>
-              </marker>
-            </defs>
-
-            <!-- Input pair -->
-            <rect class="d-box" x="10" y="40" width="140" height="236" rx="10"/>
-            <text class="d-title" x="80" y="124" text-anchor="middle">Mesh pair</text>
-            <text class="d-math" x="80" y="152" text-anchor="middle">V<tspan class="d-sub" dy="4">0</tspan><tspan class="r" dy="-4" dx="2">original</tspan></text>
-            <text class="d-math" x="80" y="176" text-anchor="middle">V<tspan class="d-sub" dy="4">1</tspan><tspan class="r" dy="-4" dx="2">stylized</tspan></text>
-            <text class="d-note" x="80" y="204" text-anchor="middle">same topology,</text>
-            <text class="d-note" x="80" y="221" text-anchor="middle">precomputed</text>
-
-            <!-- Input to methods -->
-            <path class="d-line" d="M150 76H268" marker-end="url(#arr)"/>
-            <text class="d-label" x="210" y="66" text-anchor="middle">D = V₁ − V₀</text>
-            <path class="d-line" d="M150 230H268" marker-end="url(#arr)"/>
-            <text class="d-label" x="210" y="250" text-anchor="middle">fit cages</text>
-
-            <!-- Method A -->
-            <rect class="d-box" x="270" y="40" width="190" height="72" rx="10"/>
-            <text class="d-title" x="365" y="68" text-anchor="middle">A · Vertex interpolation</text>
-            <text class="d-math" x="365" y="94" text-anchor="middle">V<tspan class="d-sub" dy="4">0</tspan><tspan dy="-4"> + α(V</tspan><tspan class="d-sub" dy="4">1</tspan><tspan dy="-4"> − V</tspan><tspan class="d-sub" dy="4">0</tspan><tspan dy="-4">)</tspan></text>
-
-            <!-- alpha pill -->
-            <rect class="d-pill" x="310" y="133" width="110" height="30" rx="15"/>
-            <text class="d-label" x="365" y="152" text-anchor="middle">α from slider</text>
-            <path class="d-line" d="M365 133V115" marker-end="url(#arr)"/>
-            <path class="d-line" d="M365 163V181" marker-end="url(#arr)"/>
-
-            <!-- Method B -->
-            <rect class="d-box" x="270" y="184" width="190" height="92" rx="10"/>
-            <text class="d-title" x="365" y="210" text-anchor="middle">B · Cage interpolation</text>
-            <text class="d-math" x="365" y="236" text-anchor="middle">c(α) = c<tspan class="d-sub" dy="4">0</tspan><tspan dy="-4"> + α(c</tspan><tspan class="d-sub" dy="4">1</tspan><tspan dy="-4"> − c</tspan><tspan class="d-sub" dy="4">0</tspan><tspan dy="-4">)</tspan></text>
-            <text class="d-math" x="365" y="260" text-anchor="middle">v(α) = <tspan class="r">∑</tspan> w<tspan class="d-sub" dy="4">j</tspan><tspan dy="-4"> c</tspan><tspan class="d-sub" dy="4">j</tspan><tspan dy="-4">(α)</tspan></text>
-
-            <!-- Methods to V(alpha) -->
-            <path class="d-line" d="M460 76H482V146H498" marker-end="url(#arr)"/>
-            <path class="d-line" d="M460 230H482V170H498" marker-end="url(#arr)"/>
-
-            <rect class="d-box hl" x="500" y="126" width="90" height="64" rx="10"/>
-            <text class="d-big" x="545" y="158" text-anchor="middle">V(α)</text>
-            <text class="d-note" x="545" y="177" text-anchor="middle">deformed mesh</text>
-
-            <!-- V(alpha) to outputs -->
-            <path class="d-line" d="M590 146H622V76H668" marker-end="url(#arr)"/>
-            <text class="d-label" x="645" y="66" text-anchor="middle">render</text>
-            <path class="d-line" d="M590 170H622V230H668" marker-end="url(#arr)"/>
-            <text class="d-label" x="645" y="250" text-anchor="middle">measure</text>
-
-            <rect class="d-box" x="670" y="40" width="140" height="72" rx="10"/>
-            <text class="d-title" x="740" y="68" text-anchor="middle">Interactive viewer</text>
-            <text class="d-note" x="740" y="92" text-anchor="middle">slider · orbit · zoom</text>
-
-            <rect class="d-box" x="670" y="184" width="140" height="92" rx="10"/>
-            <text class="d-title" x="740" y="210" text-anchor="middle">Evaluation</text>
-            <text class="d-note" x="740" y="234" text-anchor="middle">validity · smoothness</text>
-            <text class="d-note" x="740" y="254" text-anchor="middle">monotonicity · timing</text>
-          </svg>
-        </div>
-        <figcaption>Both methods read the same mesh pair and the same <span class="math">α</span>, so their outputs can be compared under identical conditions. Geometry updates are kept separate from rendering.</figcaption>
-      </figure>
-
-      <div class="components">
-        <div>
-          <h4>Mesh processing</h4>
-          <p>Load original and stylized meshes, verify vertex correspondence, compute vertex displacements, and build deformation cages where needed.</p>
-        </div>
-        <div>
-          <h4>Deformation algorithms</h4>
-          <p>Vertex interpolation as the main baseline; cage interpolation as the second method, with precomputed weights that carry control-point motion to the mesh.</p>
-        </div>
-        <div>
-          <h4>Interactive rendering</h4>
-          <p>A viewer that updates vertex positions as the user drags the strength slider. Existing libraries handle file loading, rendering, and geometric analysis.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. Goals and deliverables -->
-    <section id="goals" aria-labelledby="goals-h">
-      <div class="sec-head"><span class="sec-num">2</span><h2 id="goals-h">Goals and deliverables</h2></div>
-
-      <div class="outcome">
-        <span class="label">Minimum successful outcome</span>
-        <p>A stable slider-based system with direct vertex interpolation, a working cage-based comparison, and documented quality and performance measurements. Advanced interpolation and perceptual control come after that, if time permits.</p>
-      </div>
-
-      <h3><span class="n">2.1</span>What we plan to deliver</h3>
-      <ol class="items">
-        <li class="item">
-          <span class="tag">G1</span>
-          <div>
-            <h4>Controllable mesh stylization</h4>
-            <p>A deformation pipeline that takes an original mesh and a matching stylized target and interpolates between them with a user-set <span class="math">α</span>. We start with linear interpolation of vertex displacement fields. Both meshes share topology and vertex correspondence, so every vertex can be tracked through the deformation. We test on at least three objects with different geometric character, such as an animal, a humanoid character, and a simple decorative object.</p>
-            <div class="out"><span class="label">Output</span><span>For each object, renders at five strengths: 0%, 25%, 50%, 75%, and 100%.</span></div>
-          </div>
-        </li>
-        <li class="item">
-          <span class="tag">G2</span>
-          <div>
-            <h4>Cage-based deformation control</h4>
+        <h3>2.1 What we plan to deliver</h3>
+        <ul class="labeled-list">
+          <li>
+            <h4>G1. Controllable mesh stylization</h4>
+            <p>A deformation pipeline that takes an original mesh and a matching stylized target and interpolates between them with a user-set <var>α</var>. We start with linear interpolation of vertex displacement fields. Both meshes share topology and vertex correspondence, so every vertex can be tracked through the deformation. We test on at least three objects with different geometric character, such as an animal, a humanoid character, and a simple decorative object.</p>
+            <p><strong>Output.</strong> For each object, renders at five strengths: 0%, 25%, 50%, 75%, and 100%.</p>
+          </li>
+          <li>
+            <h4>G2. Cage-based deformation control</h4>
             <p>A coarse cage around the original mesh. We interpolate the cage control points and propagate the motion to the enclosed mesh, then compare against vertex interpolation for deformation smoothness, geometric distortion, and computational performance.</p>
-            <div class="out"><span class="label">Output</span><span>Side-by-side comparisons of the two methods, showing differences in silhouette, mesh deformation, and geometric quality.</span></div>
-          </div>
-        </li>
-        <li class="item">
-          <span class="tag">G3</span>
-          <div>
-            <h4>Interactive 3D visualization</h4>
+            <p><strong>Output.</strong> Side-by-side comparisons of the two methods, showing differences in silhouette, mesh deformation, and geometric quality.</p>
+          </li>
+          <li>
+            <h4>G3. Interactive 3D visualization</h4>
             <p>A demo where users load a mesh and adjust its stylization strength with a slider, fast enough for smooth interactive use. The interface provides:</p>
             <ul>
               <li>A slider for stylization strength from 0% to 100%</li>
@@ -727,222 +339,155 @@ tbody th { font-family: var(--font-display); font-weight: 620; font-size: 1rem; 
               <li>Switching between several example meshes</li>
               <li>A comparison between the original and the current stylized geometry</li>
             </ul>
-            <div class="out"><span class="label">Output</span><span>A live demonstration and a short video of the exaggeration changing continuously as the slider moves.</span></div>
-          </div>
-        </li>
-        <li class="item">
-          <span class="tag">G4</span>
-          <div>
-            <h4>Evaluation of geometric quality and controllability</h4>
-            <p>Quantitative and qualitative tests of whether a single strength parameter gives meaningful control. We measure the four metrics in <a href="#metrics">2.4</a> and plot each one as a function of <span class="math">α</span>.</p>
-            <div class="out"><span class="label">Output</span><span>Displacement-versus-strength plots, geometric distortion comparisons, and performance measurements.</span></div>
-          </div>
-        </li>
-      </ol>
+            <p><strong>Output.</strong> A live demonstration and a short video of the exaggeration changing continuously as the slider moves.</p>
+          </li>
+          <li>
+            <h4>G4. Evaluation of geometric quality and controllability</h4>
+            <p>Quantitative and qualitative tests of whether a single strength parameter gives meaningful control. We measure the four metrics under <a href="#metrics">quality and performance</a> and plot each one as a function of <var>α</var>.</p>
+            <p><strong>Output.</strong> Displacement-versus-strength plots, geometric distortion comparisons, and performance measurements.</p>
+          </li>
+        </ul>
 
-      <h3><span class="n">2.2</span>What we hope to deliver</h3>
-      <ol class="items">
-        <li class="item">
-          <span class="tag s">S1</span>
-          <div>
-            <h4>Geometry-aware interpolation</h4>
+        <h3>2.2 What we hope to deliver</h3>
+        <ul class="labeled-list">
+          <li>
+            <h4>S1. Geometry-aware interpolation</h4>
             <p>Linear interpolation is cheap but can produce poor intermediate shapes. We will try Laplacian smoothing and As-Rigid-As-Possible (ARAP) regularization, and compare them with linear interpolation to see whether the extra constraints improve the in-between results.</p>
-          </div>
-        </li>
-        <li class="item">
-          <span class="tag s">S2</span>
-          <div>
-            <h4>Perceptually uniform strength control</h4>
-            <p>A linear <span class="math">α</span> does not give a linear increase in perceived stylization. Growing a character’s head from 100% to 120% can be much less noticeable than growing it from 140% to 160%. We will test nonlinear mappings from slider value to deformation strength and, if feasible, run a small user study in which participants rate the perceived strength of intermediate shapes.</p>
-          </div>
-        </li>
-        <li class="item">
-          <span class="tag s">S3</span>
-          <div>
-            <h4>Localized strength control</h4>
+          </li>
+          <li>
+            <h4>S2. Perceptually uniform strength control</h4>
+            <p>A linear <var>α</var> does not give a linear increase in perceived stylization. Growing a character’s head from 100% to 120% can be much less noticeable than growing it from 140% to 160%. We will test nonlinear mappings from slider value to deformation strength and, if feasible, run a small user study in which participants rate the perceived strength of intermediate shapes.</p>
+          </li>
+          <li>
+            <h4>S3. Localized strength control</h4>
             <p>Different strengths in different regions of one mesh: exaggerate a character’s head while keeping its body nearly unchanged, or elongate an animal’s legs without changing its torso. This means blending local deformation fields while keeping the transitions between edited and unedited regions smooth.</p>
-          </div>
-        </li>
-      </ol>
+          </li>
+        </ul>
 
-      <h3><span class="n">2.3</span>Images and demo we will produce</h3>
-      <p>
-        Our main visual result shows the same object at five strengths, rendered from the same camera viewpoints and lighting so the changes can be compared directly. We will also show vertex and cage interpolation side by side, with wireframe overlays that reveal stretching and distortion.
-      </p>
-      <figure class="strip wide">
-        <ol>
-          <li><svg class="mini" data-alpha="0" role="img" aria-label="Toy mesh at 0 percent strength"></svg><b>0%</b><span>Original 3D mesh</span></li>
-          <li><svg class="mini" data-alpha="0.25" role="img" aria-label="Toy mesh at 25 percent strength"></svg><b>25%</b><span>Subtle changes to proportions</span></li>
-          <li><svg class="mini" data-alpha="0.5" role="img" aria-label="Toy mesh at 50 percent strength"></svg><b>50%</b><span>Moderate geometric exaggeration</span></li>
-          <li><svg class="mini" data-alpha="0.75" role="img" aria-label="Toy mesh at 75 percent strength"></svg><b>75%</b><span>Stronger stylization, still recognizable</span></li>
-          <li><svg class="mini" data-alpha="1" role="img" aria-label="Toy mesh at 100 percent strength"></svg><b>100%</b><span>Fully stylized target mesh</span></li>
-        </ol>
-        <figcaption>Layout of the planned strength sequence, sketched with the toy mesh from the top of the page. The dashed teal line is the original outline. Final figures will use 3D meshes, starting with a stylized animal model.</figcaption>
-      </figure>
+        <h3>2.3 Images and demo we will produce</h3>
+        <p>
+          Our main visual result shows the same object at five strengths, rendered from the same camera viewpoints and lighting so the changes can be compared directly. We will also show vertex and cage interpolation side by side, with wireframe overlays that reveal stretching and distortion.
+        </p>
+        <figure class="strip">
+          <ol>
+            <li><svg data-alpha="0" role="img" aria-label="Toy mesh at 0 percent strength"></svg><b>0%</b>Original mesh</li>
+            <li><svg data-alpha="0.25" role="img" aria-label="Toy mesh at 25 percent strength"></svg><b>25%</b>Subtle changes to proportions</li>
+            <li><svg data-alpha="0.5" role="img" aria-label="Toy mesh at 50 percent strength"></svg><b>50%</b>Moderate geometric exaggeration</li>
+            <li><svg data-alpha="0.75" role="img" aria-label="Toy mesh at 75 percent strength"></svg><b>75%</b>Stronger stylization, still recognizable</li>
+            <li><svg data-alpha="1" role="img" aria-label="Toy mesh at 100 percent strength"></svg><b>100%</b>Fully stylized target mesh</li>
+          </ol>
+          <figcaption>The toy mesh illustrates the planned five-image comparison. The dashed line marks the original outline. Final figures will use 3D meshes, starting with a stylized animal model.</figcaption>
+        </figure>
 
-      <h3 id="metrics"><span class="n">2.4</span>How we will measure quality and performance</h3>
-      <div class="tablewrap">
-        <table>
-          <thead><tr><th scope="col">Metric</th><th scope="col">What we measure at each strength</th></tr></thead>
-          <tbody>
-            <tr><th scope="row">Geometric validity</th><td>Number of degenerate triangles, inverted or flipped faces, and detected self-intersections.</td></tr>
-            <tr><th scope="row">Deformation smoothness</th><td>Changes in neighboring vertex displacements and local edge-length distortion, to find abrupt or uneven changes.</td></tr>
-            <tr><th scope="row">Monotonic strength</th><td>Displacement from the original mesh: does a larger slider value always mean a larger geometric change? We keep this separate from perceived exaggeration, which may not be linear.</td></tr>
-            <tr><th scope="row">Performance</th><td>Time to update the mesh at different strengths, for vertex-based and cage-based interpolation.</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p>We plot each metric against <span class="math">α</span>. All comparisons use fixed original–target mesh pairs, so the methods are evaluated under identical conditions.</p>
-
-      <h3><span class="n">2.5</span>Questions we will answer</h3>
-      <ol class="questions">
-        <li><h4><span class="label">Q1</span>Controllability</h4><p>Does interpolation give a smooth and predictable progression from the original mesh to the stylized target?</p></li>
-        <li><h4><span class="label">Q2</span>Geometric quality</h4><p>Which interpolation strategy better preserves mesh quality, especially for large exaggerations?</p></li>
-        <li><h4><span class="label">Q3</span>Efficiency</h4><p>Can stylization strength be adjusted interactively, without re-running expensive generative optimization?</p></li>
-      </ol>
-    </section>
-
-    <!-- 3. Schedule -->
-    <section id="schedule" aria-labelledby="schedule-h">
-      <div class="sec-head"><span class="sec-num">3</span><h2 id="schedule-h">Schedule</h2></div>
-      <p>Four weeks, from proposal feedback on November 13 to presentations on December 7–8. Tags show which goals each week moves forward.</p>
-
-      <div class="timeline wide" role="img" aria-label="Timeline from November 13 to December 8: week 1 November 13 to 19, week 2 November 20 to 26 with the milestone due November 22, week 3 November 27 to December 3, week 4 December 4 to 8 with final deliverables due December 6 and presentations December 7 to 8.">
-        <div class="tl-bar">
-          <div class="tl-seg"><b>W1</b><span>Nov 13–19</span></div>
-          <div class="tl-seg"><b>W2</b><span>Nov 20–26</span></div>
-          <div class="tl-seg"><b>W3</b><span>Nov 27–Dec 3</span></div>
-          <div class="tl-seg"><b>W4</b><span>Dec 4–8</span></div>
+        <h3 id="metrics">2.4 How we will measure quality and performance</h3>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th scope="col">Metric</th><th scope="col">What we measure at each strength</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Geometric validity</th><td>Number of degenerate triangles, inverted or flipped faces, and detected self-intersections.</td></tr>
+              <tr><th scope="row">Deformation smoothness</th><td>Changes in neighboring vertex displacements and local edge-length distortion, to find abrupt or uneven changes.</td></tr>
+              <tr><th scope="row">Monotonic strength</th><td>Displacement from the original mesh: does a larger slider value always mean a larger geometric change? We keep this separate from perceived exaggeration, which may not be linear.</td></tr>
+              <tr><th scope="row">Performance</th><td>Time to update the mesh at different strengths, for vertex-based and cage-based interpolation.</td></tr>
+            </tbody>
+          </table>
         </div>
-        <div class="tl-mark down start" style="--x:0%"><span><b>Nov 13</b> start</span></div>
-        <div class="tl-mark up" style="--x:36.54%"><span><b>Nov 22</b> milestone</span></div>
-        <div class="tl-mark up end hot" style="--x:90.38%"><span><b>Dec 6</b> final due</span></div>
-        <div class="tl-mark down end hot" style="--x:96.15%"><span><b>Dec 7–8</b> presentations</span></div>
-      </div>
+        <p>We plot each metric against <var>α</var>. All comparisons use fixed original–target mesh pairs, so the methods are evaluated under identical conditions.</p>
 
-      <ol class="weeks wide">
-        <li class="week">
-          <header><span class="when">Week 1 · Nov 13–19</span><span class="goals"><span class="tag">G1</span></span></header>
-          <h4>Setup and baseline</h4>
-          <ul>
-            <li>Review geometric stylization, mesh interpolation, and cage-based deformation.</li>
-            <li>Set up the mesh processing and visualization environment.</li>
-            <li>Collect or build at least three original–stylized mesh pairs with matching topology.</li>
-            <li>Implement vertex displacement interpolation.</li>
-            <li>Produce first visualizations at several strengths.</li>
-          </ul>
-          <footer><span class="label">Target</span>A working baseline that generates intermediate stylized meshes.</footer>
-        </li>
-        <li class="week">
-          <header><span class="when">Week 2 · Nov 20–26</span><span class="goals"><span class="tag">G2</span></span></header>
-          <h4>Cage deformation and milestone</h4>
-          <ul>
-            <li>Implement a basic cage-based deformation pipeline.</li>
-            <li>Integrate cage interpolation with the mesh viewer.</li>
-            <li>Compare cage interpolation with direct vertex interpolation.</li>
-            <li>Prepare preliminary visual results and numerical measurements.</li>
-            <li class="due">Submit the project milestone on Sunday, Nov 22.</li>
-          </ul>
-          <footer><span class="label">Target</span>Two working interpolation methods and first comparison results.</footer>
-        </li>
-        <li class="week">
-          <header><span class="when">Week 3 · Nov 27–Dec 3</span><span class="goals"><span class="tag">G3</span><span class="tag">G4</span><span class="tag s">S1</span></span></header>
-          <h4>Interactive system and evaluation</h4>
-          <ul>
-            <li>Complete the interactive slider interface.</li>
-            <li>Test deformation behavior across several objects and strengths.</li>
-            <li>Implement geometric quality and performance measurements.</li>
-            <li>Generate graphs and side-by-side comparison figures.</li>
-            <li>Investigate geometry-aware interpolation if the baseline is stable.</li>
-          </ul>
-          <footer><span class="label">Target</span>A working interactive demo with quantitative results.</footer>
-        </li>
-        <li class="week">
-          <header><span class="when">Week 4 · Dec 4–8</span><span class="goals"><span class="tag">G1–G4</span></span></header>
-          <h4>Final results and presentation</h4>
-          <ul>
-            <li>Finalize experiments and visual comparisons.</li>
-            <li>Record demo videos and capture high-quality renders.</li>
-            <li>Prepare the final report and project webpage.</li>
-            <li class="due">Submit final deliverables by Sunday, Dec 6.</li>
-            <li class="due">Present the project on Dec 7–8.</li>
-          </ul>
-          <footer><span class="label">Target</span>A complete demo, reproducible results, a final report, and presentation materials.</footer>
-        </li>
-      </ol>
-    </section>
+        <h3>2.5 Questions we will answer</h3>
+        <ul class="labeled-list">
+          <li><strong>Q1. Controllability.</strong> Does interpolation give a smooth and predictable progression from the original mesh to the stylized target?</li>
+          <li><strong>Q2. Geometric quality.</strong> Which interpolation strategy better preserves mesh quality, especially for large exaggerations?</li>
+          <li><strong>Q3. Efficiency.</strong> Can stylization strength be adjusted interactively, without re-running expensive generative optimization?</li>
+        </ul>
+      </section>
 
-    <!-- 4. Resources -->
-    <section id="resources" aria-labelledby="resources-h">
-      <div class="sec-head"><span class="sec-num">4</span><h2 id="resources-h">Resources</h2></div>
+      <!-- 3. Schedule -->
+      <section id="schedule" aria-labelledby="schedule-h">
+        <h2 id="schedule-h">3. Schedule</h2>
+        <p>Four weeks, from proposal feedback on November 13 to presentations on December 7–8. The goals for each week are listed in parentheses.</p>
 
-      <h3><span class="n">4.1</span>Related research</h3>
-      <ol class="refs">
-        <li class="ref" id="ref-1">
-          <span class="num">[1]</span>
-          <div>
-            <p class="cite">Choi et al. <a href="https://changwoonchoi.github.io/GeoStyle/">Image-Guided Geometric Stylization of 3D Meshes</a>. <span class="venue">CVPR 2026</span></p>
-            <p class="why">Image-guided geometric stylization with diffusion guidance and a coarse-to-fine deformation pipeline. This is our main motivation and our reference for cage-based geometric stylization. We focus on continuous strength control over the resulting deformation and do not reproduce its full generative pipeline.</p>
-          </div>
-        </li>
-        <li class="ref" id="ref-2">
-          <span class="num">[2]</span>
-          <div>
-            <p class="cite">Dinh et al. <a href="https://openaccess.thecvf.com/content/CVPR2025/html/Dinh_Geometry_in_Style_3D_Stylization_via_Surface_Normal_Deformation_CVPR_2025_paper.html">Geometry in Style: 3D Stylization via Surface Normal Deformation</a>. <span class="venue">CVPR 2025</span></p>
-            <p class="why">Surface-normal-based deformation with differentiable ARAP regularization, for expressive stylization that keeps object identity. It motivates our study of geometric quality and possible regularization of intermediate shapes.</p>
-          </div>
-        </li>
-        <li class="ref" id="ref-3">
-          <span class="num">[3]</span>
-          <div>
-            <p class="cite">Wynn et al. <a href="https://openaccess.thecvf.com/content/CVPR2025/papers/Wynn_Morpheus_Text-Driven_3D_Gaussian_Splat_Shape_and_Color_Stylization_CVPR_2025_paper.pdf">Morpheus: Text-Driven 3D Gaussian Splat Shape and Color Stylization</a>. <span class="venue">CVPR 2025</span></p>
-            <p class="why">Adds control over appearance and shape stylization strength for 3D Gaussian Splatting, which makes it the closest prior work on strength control. Our project works with explicit triangle meshes and analyzes the geometry of the intermediate meshes.</p>
-          </div>
-        </li>
-      </ol>
+        <h3>Week 1 · Nov 13–19 — Setup and baseline (G1)</h3>
+        <ul>
+          <li>Review geometric stylization, mesh interpolation, and cage-based deformation.</li>
+          <li>Set up the mesh processing and visualization environment.</li>
+          <li>Collect or build at least three original–stylized mesh pairs with matching topology.</li>
+          <li>Implement vertex displacement interpolation.</li>
+          <li>Produce first visualizations at several strengths.</li>
+        </ul>
+        <p><strong>Target.</strong> A working baseline that generates intermediate stylized meshes.</p>
 
-      <h3><span class="n">4.2</span>Software</h3>
-      <dl class="tools">
-        <div><dt><a href="https://numpy.org/">Python and NumPy</a></dt><dd>Mesh deformation computations and analysis.</dd></div>
-        <div><dt><a href="https://trimesh.org/">Trimesh</a> and/or <a href="https://libigl.github.io/">libigl</a></dt><dd>Mesh processing, geometry calculations, and validation.</dd></div>
-        <div><dt><a href="https://polyscope.run/">Polyscope</a> or similar</dt><dd>Interactive 3D viewer with slider controls.</dd></div>
-        <div><dt><a href="https://www.blender.org/">Blender</a></dt><dd>Final comparison renders and demo videos.</dd></div>
-        <div><dt><a href="https://pytorch.org/">PyTorch</a> (optional)</dt><dd>Experimental geometry optimization, or integration with outputs of existing stylization methods.</dd></div>
-      </dl>
+        <h3>Week 2 · Nov 20–26 — Cage deformation and milestone (G2)</h3>
+        <ul>
+          <li>Implement a basic cage-based deformation pipeline.</li>
+          <li>Integrate cage interpolation with the mesh viewer.</li>
+          <li>Compare cage interpolation with direct vertex interpolation.</li>
+          <li>Prepare preliminary visual results and numerical measurements.</li>
+          <li><strong>Submit the project milestone on Sunday, Nov 22.</strong></li>
+        </ul>
+        <p><strong>Target.</strong> Two working interpolation methods and first comparison results.</p>
 
-      <h3><span class="n">4.3</span>Platform and starting point</h3>
-      <p>
-        Development and baseline interpolation run on standard desktop hardware. We may use a GPU for advanced experiments, but the core project does not need GPU-based diffusion model training.
-      </p>
-      <p>
-        Existing libraries handle file loading, rendering, and geometric analysis. We will refer to existing implementations and public mesh assets where they are compatible, such as the examples on the GeoStyle project page&nbsp;<a href="#ref-1">[1]</a>, and write our own interpolation, cage deformation, and evaluation code.
-      </p>
-    </section>
-  </main>
-</div>
+        <h3>Week 3 · Nov 27–Dec 3 — Interactive system and evaluation (G3, G4, S1)</h3>
+        <ul>
+          <li>Complete the interactive slider interface.</li>
+          <li>Test deformation behavior across several objects and strengths.</li>
+          <li>Implement geometric quality and performance measurements.</li>
+          <li>Generate graphs and side-by-side comparison figures.</li>
+          <li>Investigate geometry-aware interpolation if the baseline is stable.</li>
+        </ul>
+        <p><strong>Target.</strong> A working interactive demo with quantitative results.</p>
 
-<footer class="foot">
-  <div class="wrap">
-    <span>StyleSlider · CS 184/284A final project proposal · Fall 2026</span>
-    <span>Sho Tsunoda · Heekyung Lee · Ken Zheng · Yuxiang Liu</span>
-    <a data-page-url href="https://xiang-foothill.github.io/cs184-final-project/proposal-website/">xiang-foothill.github.io/cs184-final-project/proposal-website</a>
+        <h3>Week 4 · Dec 4–8 — Final results and presentation (G1–G4)</h3>
+        <ul>
+          <li>Finalize experiments and visual comparisons.</li>
+          <li>Record demo videos and capture high-quality renders.</li>
+          <li>Prepare the final report and project webpage.</li>
+          <li><strong>Submit final deliverables by Sunday, Dec 6.</strong></li>
+          <li><strong>Present the project on Dec 7–8.</strong></li>
+        </ul>
+        <p><strong>Target.</strong> A complete demo, reproducible results, a final report, and presentation materials.</p>
+      </section>
+
+      <!-- 4. Resources -->
+      <section id="resources" aria-labelledby="resources-h">
+        <h2 id="resources-h">4. Resources</h2>
+
+        <h3>4.1 Related research</h3>
+        <ol class="refs">
+          <li id="ref-1">Choi et al. <a href="https://changwoonchoi.github.io/GeoStyle/">Image-Guided Geometric Stylization of 3D Meshes</a>. CVPR 2026.
+            <p>Image-guided geometric stylization with diffusion guidance and a coarse-to-fine deformation pipeline. This is our main motivation and our reference for cage-based geometric stylization. We focus on continuous strength control over the resulting deformation and do not reproduce its full generative pipeline.</p>
+          </li>
+          <li id="ref-2">Dinh et al. <a href="https://openaccess.thecvf.com/content/CVPR2025/html/Dinh_Geometry_in_Style_3D_Stylization_via_Surface_Normal_Deformation_CVPR_2025_paper.html">Geometry in Style: 3D Stylization via Surface Normal Deformation</a>. CVPR 2025.
+            <p>Surface-normal-based deformation with differentiable ARAP regularization, for expressive stylization that keeps object identity. It motivates our study of geometric quality and possible regularization of intermediate shapes.</p>
+          </li>
+          <li id="ref-3">Wynn et al. <a href="https://openaccess.thecvf.com/content/CVPR2025/papers/Wynn_Morpheus_Text-Driven_3D_Gaussian_Splat_Shape_and_Color_Stylization_CVPR_2025_paper.pdf">Morpheus: Text-Driven 3D Gaussian Splat Shape and Color Stylization</a>. CVPR 2025.
+            <p>Adds control over appearance and shape stylization strength for 3D Gaussian Splatting, which makes it the closest prior work on strength control. Our project works with explicit triangle meshes and analyzes the geometry of the intermediate meshes.</p>
+          </li>
+        </ol>
+
+        <h3>4.2 Software</h3>
+        <ul>
+          <li><a href="https://numpy.org/">Python and NumPy</a>. Mesh deformation computations and analysis.</li>
+          <li><a href="https://trimesh.org/">Trimesh</a> and/or <a href="https://libigl.github.io/">libigl</a>. Mesh processing, geometry calculations, and validation.</li>
+          <li><a href="https://polyscope.run/">Polyscope</a> or similar. Interactive 3D viewer with slider controls.</li>
+          <li><a href="https://www.blender.org/">Blender</a>. Final comparison renders and demo videos.</li>
+          <li><a href="https://pytorch.org/">PyTorch</a> (optional). Experimental geometry optimization, or integration with outputs of existing stylization methods.</li>
+        </ul>
+
+        <h3>4.3 Platform and starting point</h3>
+        <p>
+          Development and baseline interpolation run on standard desktop hardware. We may use a GPU for advanced experiments, but the core project does not need GPU-based diffusion model training.
+        </p>
+        <p>
+          Existing libraries handle file loading, rendering, and geometric analysis. We will refer to existing implementations and public mesh assets where they are compatible, such as the examples on the GeoStyle project page&nbsp;<a href="#ref-1">[1]</a>, and write our own interpolation, cage deformation, and evaluation code.
+        </p>
+      </section>
+    </main>
   </div>
-</footer>
 
 <script>
 (() => {
   "use strict";
   const $ = (s) => document.querySelector(s);
-
-  /* ---- Page URL: show the real address when the page is hosted ---- */
-  const host = location.hostname;
-  if (/^https?:$/.test(location.protocol) && host && host !== "localhost" && host !== "127.0.0.1") {
-    const url = location.origin + location.pathname.replace(/index\.html$/, "");
-    document.querySelectorAll("[data-page-url]").forEach((a) => {
-      a.href = url;
-      a.textContent = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
-    });
-  }
 
   /* ---- Toy mesh: a disk triangulation mapped into a cat-head shape ---- */
   const TAU = Math.PI * 2, DEG = Math.PI / 180, K = 8, S = 100;
@@ -1062,11 +607,11 @@ tbody th { font-family: var(--font-display); font-weight: 620; font-size: 1rem; 
   document.querySelectorAll('[data-count="t"]').forEach((n) => (n.textContent = tris.length));
   document.querySelectorAll("svg[data-alpha]").forEach((svg) => draw(scene(svg, false, false), Number(svg.dataset.alpha)));
 
-  /* ---- Hero demo ---- */
+  /* ---- Interactive concept sketch ---- */
   const demo = $("#demo");
   if (!demo) return;
   const H = scene(demo, true, true);
-  const slider = $("#alpha"), out = $("#alpha-out"), hud = $("#hud-alpha"), title = $("#title");
+  const slider = $("#alpha"), out = $("#alpha-out");
   const wireBox = $("#wire"), heatBox = $("#heat"), heatKey = $("#heat-key"), play = $("#play");
   const presets = [...document.querySelectorAll("#presets button")];
   const rDisp = $("#r-disp"), rStretch = $("#r-stretch"), rFlip = $("#r-flip");
@@ -1097,9 +642,6 @@ tbody th { font-family: var(--font-display); font-weight: 620; font-size: 1rem; 
     rStretch.textContent = maxS.toFixed(2) + "×";
     rFlip.innerHTML = flips + " <small>/ " + tris.length + "</small>";
     out.textContent = a.toFixed(2);
-    hud.textContent = "α = " + a.toFixed(2);
-    title.style.fontVariationSettings = '"wdth" ' + (75 + 50 * a).toFixed(1);
-    title.style.fontWeight = String(Math.round(480 + 360 * a));
     presets.forEach((b) => b.setAttribute("aria-pressed", Math.abs(Number(b.dataset.a) - a) < 0.005 ? "true" : "false"));
   }
   function setAlpha(a, syncSlider) {
@@ -1138,20 +680,6 @@ tbody th { font-family: var(--font-display); font-weight: 620; font-size: 1rem; 
   heatKey.hidden = !heatBox.checked;
   render();
 
-  /* ---- Section rail: mark the section in view ---- */
-  const links = [...document.querySelectorAll(".rail a")];
-  if ("IntersectionObserver" in window && links.length) {
-    const byId = new Map(links.map((a) => [a.getAttribute("href").slice(1), a]));
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((en) => {
-        if (!en.isIntersecting) return;
-        links.forEach((l) => l.removeAttribute("aria-current"));
-        const a = byId.get(en.target.id);
-        if (a) a.setAttribute("aria-current", "true");
-      });
-    }, { rootMargin: "-30% 0px -60% 0px" });
-    byId.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
-  }
 })();
 </script>
 </body>
